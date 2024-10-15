@@ -24,6 +24,58 @@ app.get("/api/hello", function (req, res) {
   res.json({greeting: 'hello API'});
 });
 
+app.get('/api/:date?', function (req, res) {
+  function isUnixTimestampString (timestamp) {
+    if (timestamp !== undefined) {
+      if (!isNaN(timestamp)) {
+        return true
+      }
+    }
+    return false
+  }
+
+  function getError () {
+    // invalid date should return { error: "Invalid Date" }
+    return { error: "Invalid Date" }
+  }
+
+  function getNow () {
+    return { 
+      // empty date should return current time as JSON with unix key
+      unix: (new Date()).getTime(),
+      // Empty date should return current time as JSON with utc key
+      utc: (new Date()).toUTCString(),
+    }
+  }
+
+  function getValidDates () {
+    return {
+      // valid date should return JSON with unix key that is a unix timestamp in milliseconds (as a Number)
+      unix: date.getTime(),
+      // valid date should return JSON with utc key that is a string date in format "Thu, 01 Jan 1970 00:00:00 GMT"
+      utc: date.toUTCString(),
+    }
+  }
+
+  const date = isUnixTimestampString(req.params.date)
+    ? new Date(Number(req.params.date))
+    : new Date(req.params.date)
+  let response = {}
+
+  console.log(`Date ${date}; URL param ${req.params.date}`)
+
+  if (req.params.date === undefined) {
+    response = getNow()
+  }
+  else if (date.toString() === 'Invalid Date' && req.params.date) {
+    response = getError()
+  }
+  else {
+    response = getValidDates()
+  }
+
+  res.json(response);
+})
 
 
 // Listen on port set in environment variable or default to 3000
